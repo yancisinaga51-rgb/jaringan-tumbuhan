@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Jaringan &amp; Organ Tumbuhan — Kelas XI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --hijau-tua: #1B4332;
+    --hijau-daun: #3F6B4F;
+    --sage: #8FAE96;
+    --krem: #F6F3EA;
+    --krem-kartu: #FFFFFE;
+    --emas: #A8763E;
+    --emas-terang: #C6975C;
+    --teks: #22281F;
+    --teks-lembut: #5B6459;
+    --garis: #DAD6C6;
+    --merah: #A5423A;
+    --hijau-benar: #2F6A4A;
+    font-size: 16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--krem);
+    background-image:
+      radial-gradient(circle at 8% 12%, rgba(63,107,79,0.07) 0, transparent 40%),
+      radial-gradient(circle at 92% 88%, rgba(168,118,62,0.08) 0, transparent 45%);
+    color: var(--teks);
+    font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    min-height: 100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 28px 16px 60px;
+  }
+  .sans{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+
+  .wrap{ width:100%; max-width: 760px; }
+
+  /* ---- Masthead ---- */
+  .masthead{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom: 2px solid var(--hijau-tua);
+    padding-bottom: 10px; margin-bottom: 22px;
+  }
+  .masthead h1{
+    font-size: 1.5rem; margin:0; font-weight:700; color:var(--hijau-tua); letter-spacing:0.2px;
+  }
+  .masthead .sub{ font-family: -apple-system,sans-serif; font-size:0.72rem; color:var(--teks-lembut); text-transform:uppercase; letter-spacing:1.5px; }
+
+  /* ---- Card ---- */
+  .card{
+    background: var(--krem-kartu);
+    border: 1px solid var(--garis);
+    border-radius: 4px;
+    padding: 32px;
+    box-shadow: 0 1px 0 rgba(27,67,50,0.04);
+  }
+
+  /* ---- Start screen ---- */
+  .lead{ font-size:1.02rem; line-height:1.65; color:var(--teks-lembut); margin: 0 0 22px; }
+  .field{ margin-bottom:18px; }
+  .field label{ display:block; font-family:-apple-system,sans-serif; font-size:0.78rem; color:var(--hijau-tua); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .field input, .field select{
+    width:100%; padding: 11px 12px; font-size:1rem; border:1px solid var(--garis); border-radius:3px;
+    font-family:-apple-system,sans-serif; background:#fff; color:var(--teks);
+  }
+  .field input:focus, .field select:focus{ outline:none; border-color:var(--hijau-daun); }
+  .meta-note{ font-family:-apple-system,sans-serif; font-size:0.78rem; color:var(--teks-lembut); margin-top: 4px; line-height:1.5;}
+
+  .btn{
+    font-family:-apple-system,sans-serif; font-weight:600; font-size:0.92rem;
+    border:none; border-radius:3px; padding: 12px 22px; cursor:pointer;
+    transition: transform 0.06s ease, background 0.15s ease;
+  }
+  .btn:active{ transform: translateY(1px); }
+  .btn-utama{ background: var(--hijau-tua); color:#fff; }
+  .btn-utama:hover{ background:#12332A; }
+  .btn-utama:disabled{ background:#B7BEB2; cursor:not-allowed; }
+  .btn-luar{ background:transparent; color:var(--hijau-tua); border:1px solid var(--hijau-tua); }
+  .btn-luar:hover{ background: rgba(27,67,50,0.06); }
+  .btn-kecil{ padding:7px 12px; font-size:0.8rem; }
+
+  /* ---- Quiz top bar ---- */
+  .infobar{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+    font-family:-apple-system,sans-serif; margin-bottom:16px;
+  }
+  .siswa-chip{
+    background:#fff; border:1px solid var(--garis); border-radius: 20px; padding:6px 14px 6px 6px;
+    display:flex; align-items:center; gap:8px; font-size:0.85rem;
+  }
+  .siswa-chip .avatar{
+    width:26px; height:26px; border-radius:50%; background:var(--hijau-daun); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem;
+  }
+  .siswa-chip b{ color:var(--hijau-tua); }
+  .timer-chip{
+    background: var(--hijau-tua); color:#fff; border-radius:20px; padding:6px 16px;
+    font-variant-numeric: tabular-nums; font-size:0.9rem; font-weight:600; letter-spacing:0.5px;
+  }
+
+  .progress-track{ height:6px; background:#E7E3D4; border-radius:4px; overflow:hidden; margin-bottom:22px; }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--hijau-daun), var(--emas-terang)); transition: width 0.25s ease; }
+
+  .soal-nomor{
+    font-family:-apple-system,sans-serif; font-size:0.78rem; text-transform:uppercase; letter-spacing:1.5px;
+    color:var(--emas); font-weight:700; margin-bottom:10px;
+  }
+  .soal-topik{ color:var(--teks-lembut); font-weight:400; text-transform:none; letter-spacing:0; }
+  .soal-teks{ font-size:1.12rem; line-height:1.7; white-space: pre-line; margin-bottom: 22px; }
+
+  .opsi{ display:flex; flex-direction:column; gap:10px; margin-bottom:26px; }
+  .opsi button{
+    display:flex; align-items:flex-start; gap:12px; text-align:left;
+    background:#fff; border:1px solid var(--garis); border-radius:4px; padding:12px 14px;
+    font-family:-apple-system,sans-serif; font-size:0.95rem; line-height:1.5; cursor:pointer; color:var(--teks);
+    transition: border-color 0.12s ease, background 0.12s ease;
+  }
+  .opsi button:hover{ border-color: var(--hijau-daun); background: rgba(63,107,79,0.04); }
+  .opsi button.dipilih{ border-color: var(--hijau-tua); background: rgba(27,67,50,0.08); }
+  .opsi button .huruf{
+    flex-shrink:0; width:24px; height:24px; border-radius:50%; border:1px solid var(--garis);
+    display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; color:var(--teks-lembut);
+  }
+  .opsi button.dipilih .huruf{ background: var(--hijau-tua); color:#fff; border-color: var(--hijau-tua); }
+
+  .nav-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .nav-row .kanan{ display:flex; gap:10px; }
+
+  .peta{ display:flex; flex-wrap:wrap; gap:6px; margin: 20px 0 4px; }
+  .peta button{
+    width:30px; height:30px; border-radius:3px; border:1px solid var(--garis); background:#fff;
+    font-family:-apple-system,sans-serif; font-size:0.72rem; color:var(--teks-lembut); cursor:pointer;
+  }
+  .peta button.terjawab{ background: var(--sage); border-color:var(--hijau-daun); color:#12332A; }
+  .peta button.aktif{ outline: 2px solid var(--emas); outline-offset:1px; }
+
+  /* ---- Result screen ---- */
+  .skor-besar{ text-align:center; padding: 6px 0 20px; }
+  .skor-angka{ font-size:3.4rem; font-weight:700; color:var(--hijau-tua); line-height:1; }
+  .skor-label{ font-family:-apple-system,sans-serif; color:var(--teks-lembut); font-size:0.85rem; margin-top:6px; }
+  .ringkas-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-family:-apple-system,sans-serif;
+    margin: 18px 0 24px;
+  }
+  .ringkas-item{ background: var(--krem); border:1px solid var(--garis); border-radius:4px; padding:12px 14px; }
+  .ringkas-item .k{ font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--teks-lembut); }
+  .ringkas-item .v{ font-size:1.05rem; font-weight:700; color:var(--hijau-tua); margin-top:2px; }
+
+  .topik-breakdown{ font-family:-apple-system,sans-serif; font-size:0.85rem; }
+  .topik-breakdown h3{ font-size:0.78rem; text-transform:uppercase; letter-spacing:1px; color:var(--hijau-tua); margin:0 0 10px; }
+  .topik-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .topik-row .nama{ width:150px; flex-shrink:0; color:var(--teks-lembut); }
+  .topik-row .bar-track{ flex:1; height:8px; background:#E7E3D4; border-radius:4px; overflow:hidden; }
+  .topik-row .bar-fill{ height:100%; background: var(--hijau-daun); }
+  .topik-row .angka{ width:44px; text-align:right; color:var(--teks-lembut); flex-shrink:0; }
+
+  /* ---- Admin/rekap ---- */
+  .admin-table{ width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif; font-size:0.82rem; }
+  .admin-table th, .admin-table td{ border-bottom:1px solid var(--garis); padding:8px 6px; text-align:left; }
+  .admin-table th{ color:var(--hijau-tua); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.6px; }
+  .admin-table tr:last-child td{ border-bottom:none; }
+  .kosong{ font-family:-apple-system,sans-serif; color:var(--teks-lembut); font-size:0.88rem; padding: 20px 0; text-align:center; }
+
+  .top-actions{ display:flex; justify-content:flex-end; margin-bottom:12px; gap:8px; }
+  .footnote{ font-family:-apple-system,sans-serif; font-size:0.72rem; color:var(--teks-lembut); text-align:center; margin-top:22px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <h1>🌿 Jaringan &amp; Organ Tumbuhan</h1>
+    <div class="sub">Kuis TKA · Biologi Kelas XI</div>
+  </div>
+  <div id="app"></div>
+  <div class="footnote" id="footnote"></div>
+</div>
+
+<script>
+/* ============ BANK SOAL (60 butir) ============ */
+const QUESTIONS = [
+{t:"Meristem", q:"Berdasarkan letak dan arah pertumbuhannya, urutan daerah pada ujung akar dari titik paling ujung ke arah pangkal yang tepat adalah...",
+ o:["Daerah diferensiasi – daerah pemanjangan – daerah pembelahan","Daerah pembelahan – daerah pemanjangan – daerah diferensiasi","Daerah pemanjangan – daerah diferensiasi – daerah pembelahan","Daerah diferensiasi – daerah pembelahan – daerah pemanjangan","Daerah pembelahan – daerah diferensiasi – daerah pemanjangan"], c:1},
+
+{t:"Meristem · Numerasi", q:"Seorang siswa menandai akar kecambah jagung dengan tinta setiap 2 mm dari ujung akar, lalu mengukur pertambahan panjang tiap zona setelah 24 jam:\nZona 0–2 mm: bertambah 0,5 mm\nZona 2–4 mm: bertambah 3,0 mm\nZona 4–6 mm: bertambah 1,2 mm\nZona 6–8 mm: bertambah 0,3 mm\nZona 8–10 mm: bertambah 0,2 mm\nBerdasarkan data tersebut, zona yang merupakan daerah pemanjangan (elongasi) adalah...",
+ o:["0–2 mm dari ujung akar","2–4 mm dari ujung akar","4–6 mm dari ujung akar","6–8 mm dari ujung akar","8–10 mm dari ujung akar"], c:1},
+
+{t:"Meristem", q:"Sel-sel meristem memiliki ciri khas yang membedakannya dari sel jaringan dewasa, yaitu...",
+ o:["Dinding sel tebal berlignin, vakuola besar, inti kecil","Dinding sel tipis, vakuola kecil/tidak ada, inti relatif besar, aktif membelah","Dinding sel tebal, tidak memiliki inti, banyak plastida","Sel telah mengalami diferensiasi sempurna dan tidak aktif membelah","Dinding sel berlapis suberin dan sel dalam keadaan mati"], c:1},
+
+{t:"Meristem", q:"Meristem lateral (kambium vaskuler dan kambium gabus) yang menyebabkan pertambahan diameter batang umumnya dijumpai pada...",
+ o:["Semua tumbuhan monokotil","Tumbuhan dikotil dan gymnospermae berkayu","Tumbuhan paku homospora saja","Tumbuhan lumut","Semua tumbuhan tanpa kecuali"], c:1},
+
+{t:"Meristem", q:"Meristem interkalar yang memungkinkan ruas batang memanjang meski bagian ujungnya telah dipotong (misalnya pada rumput setelah dipangkas) terletak di...",
+ o:["Ujung akar","Ujung batang saja","Pangkal setiap ruas/buku batang","Empulur batang","Kambium gabus"], c:2},
+
+{t:"Meristem", q:"Promeristem pada titik tumbuh akan berdiferensiasi menjadi tiga jaringan meristem primer. Pasangan yang tepat antara meristem primer dan jaringan dewasa yang dihasilkannya adalah...",
+ o:["Protoderm → xilem dan floem primer","Prokambium → epidermis","Meristem dasar → jaringan dasar (parenkim, kolenkim, sklerenkim)","Protoderm → empulur","Prokambium → jaringan gabus"], c:2},
+
+{t:"Jaringan Epidermis", q:"Fungsi utama jaringan epidermis pada organ tumbuhan adalah...",
+ o:["Tempat berlangsungnya fotosintesis utama","Melindungi jaringan di bawahnya serta mengatur pertukaran zat dengan lingkungan","Mengangkut air dan mineral dari akar ke daun","Menyimpan cadangan makanan dalam jumlah besar","Menghasilkan hormon pertumbuhan utama"], c:1},
+
+{t:"Epidermis · Stomata", q:"Membuka dan menutupnya stomata sangat dipengaruhi oleh perubahan tekanan turgor pada sel penjaga (guard cell). Ketika sel penjaga menyerap air dan turgid, stomata akan...",
+ o:["Menutup karena sel penjaga menggembung merata","Membuka karena dinding sel penjaga yang tipis di sisi luar melengkung lebih besar daripada sisi dalam yang tebal","Menutup karena tekanan turgor menekan sel tetangga","Tetap tertutup hingga malam hari","Membuka hanya jika suhu lingkungan sangat rendah"], c:1},
+
+{t:"Epidermis · Numerasi", q:"Seorang siswa mengamati permukaan bawah daun di bawah mikroskop pada bidang pandang berbentuk lingkaran berdiameter 0,5 mm dan menghitung 45 stomata. Kerapatan stomata (jumlah per mm²) pada daun tersebut adalah... (gunakan π ≈ 3,14)",
+ o:["45 stomata/mm²","90 stomata/mm²","150 stomata/mm²","≈ 229 stomata/mm²","450 stomata/mm²"], c:3},
+
+{t:"Epidermis · Trikoma", q:"Trikoma (rambut-rambut halus) pada permukaan epidermis daun umumnya berfungsi untuk...",
+ o:["Mengangkut hasil fotosintesis ke seluruh tubuh","Mengurangi laju transpirasi dan sebagai pertahanan terhadap herbivora","Menyerap air dari udara sebanyak-banyaknya pada tumbuhan hidrofit","Menggantikan fungsi xilem dalam pengangkutan air","Menghasilkan klorofil dalam jumlah besar"], c:1},
+
+{t:"Epidermis · Modifikasi", q:"Velamen, yaitu lapisan epidermis akar berlapis-lapis yang tersusun dari sel-sel mati, banyak dijumpai pada akar tumbuhan epifit seperti anggrek. Fungsi utamanya adalah...",
+ o:["Fotosintesis utama tumbuhan","Menyerap dan menyimpan air dari udara lembap","Mengangkut hasil fotosintesis ke akar","Melakukan pertukaran gas seperti stomata","Menghasilkan hormon auksin"], c:1},
+
+{t:"Epidermis · Modifikasi", q:"Sel kipas (bulliform cells) yang berukuran besar dan berdinding tipis pada epidermis daun tumbuhan famili Poaceae (rumput-rumputan) berperan dalam...",
+ o:["Fotosintesis intensif","Menggulung atau melipat daun saat kekurangan air untuk mengurangi transpirasi","Mengangkut air dari akar ke daun","Membentuk lingkaran tahun","Menghasilkan getah pertahanan"], c:1},
+
+{t:"Epidermis · Kutikula", q:"Lapisan kutikula yang tebal di permukaan epidermis daun tumbuhan xerofit berfungsi untuk...",
+ o:["Mempercepat laju transpirasi","Meningkatkan penyerapan cahaya matahari","Mengurangi kehilangan air melalui penguapan","Membantu proses respirasi sel epidermis","Menyimpan cadangan air dalam jumlah besar"], c:2},
+
+{t:"Epidermis · Idioblas", q:"Sel litokis yang mengandung kristal kalsium karbonat (sistolit), seperti yang dijumpai pada daun tumbuhan genus Ficus, merupakan salah satu bentuk...",
+ o:["Jaringan meristem sekunder","Modifikasi sel epidermis (idioblas)","Jaringan xilem sekunder","Bagian dari berkas pengangkut","Jaringan kolenkim penyokong"], c:1},
+
+{t:"Parenkim", q:"Pada daun dikotil, jaringan parenkim palisade (tiang) tersusun rapat dan mengandung banyak kloroplas dibandingkan parenkim spons (bunga karang). Hal ini berkaitan dengan fungsi parenkim palisade sebagai...",
+ o:["Tempat utama berlangsungnya fotosintesis","Jaringan pengangkut utama","Pelindung dari kehilangan air","Penyimpan cadangan makanan dalam jumlah besar","Penyokong utama daun"], c:0},
+
+{t:"Parenkim · Adaptasi", q:"Aerenkim, yaitu parenkim dengan rongga antarsel yang besar, banyak dijumpai pada tumbuhan hidrofit atau akar padi di lahan tergenang. Fungsi utamanya adalah...",
+ o:["Menyimpan cadangan lemak","Menyediakan ruang penyimpanan udara untuk pertukaran gas dan membantu mengapung","Mempercepat pertumbuhan sekunder","Menggantikan fungsi floem","Meningkatkan penyerapan cahaya"], c:1},
+
+{t:"Parenkim", q:"Umbi kentang menyimpan cadangan makanan dalam bentuk pati yang terakumulasi di dalam sel-sel...",
+ o:["Parenkim penimbun","Kolenkim","Sklerenkim","Epidermis","Floem"], c:0},
+
+{t:"Parenkim · Numerasi", q:"Data persentase volume ruang antarsel (rongga udara) pada akar padi:\nAkar dari sawah tergenang: 32% volume adalah rongga udara\nAkar dari lahan kering (tidak tergenang): 8% volume adalah rongga udara\nData ini paling tepat menunjukkan bahwa akar padi di lahan tergenang mengembangkan...",
+ o:["Lebih banyak sklerenkim untuk kekuatan","Lebih banyak aerenkim sebagai adaptasi kekurangan oksigen di tanah tergenang","Lebih sedikit jaringan pengangkut","Lebih banyak kloroplas pada akar","Lapisan kutikula yang lebih tebal"], c:1},
+
+{t:"Kolenkim & Sklerenkim", q:"Perbedaan mendasar antara jaringan kolenkim dan sklerenkim adalah...",
+ o:["Kolenkim tersusun sel mati berdinding tebal merata, sklerenkim tersusun sel hidup berdinding tipis","Kolenkim tersusun sel hidup dengan penebalan dinding tidak merata (selulosa), sklerenkim tersusun sel mati berdinding tebal berlignin merata","Kolenkim hanya terdapat pada akar, sklerenkim hanya pada daun","Kolenkim menghasilkan lignin, sklerenkim menghasilkan selulosa","Keduanya identik secara struktur maupun fungsi"], c:1},
+
+{t:"Kolenkim", q:"Jaringan kolenkim banyak dijumpai pada tangkai daun dan batang muda yang masih aktif tumbuh karena kolenkim...",
+ o:["Bersifat kaku dan tidak dapat mengikuti pertumbuhan organ","Bersifat lentur, hidup, dan mampu menyokong organ yang masih memanjang","Hanya berfungsi sebagai jaringan pengangkut","Merupakan jaringan meristematik","Menghasilkan hormon giberelin"], c:1},
+
+{t:"Sklerenkim", q:"Sklereid (sel batu) yang memberi tekstur kasar pada daging buah pir merupakan salah satu jenis jaringan...",
+ o:["Parenkim","Kolenkim","Sklerenkim","Xilem primer","Floem sekunder"], c:2},
+
+{t:"Kolenkim & Sklerenkim · Numerasi", q:"Data dominasi jaringan penyokong pada batang tumbuhan dikotil berdasarkan fase pertumbuhan:\nFase muda (aktif memanjang): kolenkim 70%, sklerenkim 5%\nFase dewasa (pertumbuhan primer selesai): kolenkim 15%, sklerenkim 60%\nPola data tersebut paling tepat menunjukkan bahwa...",
+ o:["Kolenkim menggantikan sklerenkim seiring pertambahan umur organ","Sklerenkim mendominasi pada organ muda yang masih tumbuh memanjang","Sklerenkim meningkat perannya seiring organ berhenti tumbuh memanjang dan membutuhkan penyokong permanen","Kedua jaringan selalu memiliki proporsi yang sama","Kolenkim hanya ditemukan pada organ generatif"], c:2},
+
+{t:"Sklerenkim", q:"Sklerenkim umumnya tidak dijumpai pada organ tumbuhan yang masih aktif tumbuh memanjang. Alasan yang paling tepat adalah...",
+ o:["Sklerenkim mudah rusak oleh cahaya matahari","Dinding sel sklerenkim yang tebal dan berlignin bersifat kaku sehingga dapat menghambat pemanjangan sel di sekitarnya","Sklerenkim hanya terbentuk pada malam hari","Sklerenkim memerlukan klorofil untuk terbentuk","Sklerenkim selalu terbentuk bersamaan dengan xilem primer saja"], c:1},
+
+{t:"Xilem & Floem", q:"Perbedaan trakeid dan trakea (unsur pembuluh) sebagai penyusun xilem terletak pada...",
+ o:["Trakeid memiliki perforasi (lubang) pada dinding ujung sel sehingga membentuk pipa berkesinambungan, trakea tidak","Trakea memiliki perforasi pada dinding ujung sel sehingga membentuk pipa berkesinambungan, trakeid tidak","Trakeid hanya ditemukan pada tumbuhan monokotil","Trakea tersusun dari sel-sel hidup, trakeid dari sel mati","Keduanya hanya berbeda dalam hal warna sel"], c:1},
+
+{t:"Xilem", q:"Arah aliran air dan mineral pada jaringan xilem umumnya bersifat...",
+ o:["Dua arah, bergantung kebutuhan","Satu arah, dari akar menuju daun","Satu arah, dari daun menuju akar","Satu arah, dari batang menuju bunga saja","Acak tanpa arah tertentu"], c:1},
+
+{t:"Floem", q:"Berbeda dengan xilem, aliran zat pada floem bersifat...",
+ o:["Selalu dari akar ke daun","Selalu dari daun ke akar","Dua arah (bidirectional), tergantung letak organ sumber (source) dan tujuan (sink)","Hanya berlangsung pada malam hari","Tidak melibatkan tekanan osmotik"], c:2},
+
+{t:"Xilem · Numerasi", q:"Sebatang pohon melakukan transpirasi sebesar 300.000 mm³ air per jam. Luas penampang total jaringan xilem pada batang pohon tersebut adalah 300 mm². Kecepatan aliran air rata-rata dalam xilem adalah...",
+ o:["0,1 m/jam","0,5 m/jam","1 m/jam","5 m/jam","10 m/jam"], c:2},
+
+{t:"Xilem · Teori Kohesi-Adhesi-Tegangan", q:"Menurut teori kohesi-adhesi-tegangan (cohesion-tension theory), air dapat naik melalui xilem hingga ke pucuk pohon yang tinggi karena adanya gradien potensial air. Urutan potensial air dari yang paling negatif ke yang paling tinggi (kurang negatif) yang tepat adalah...",
+ o:["Tanah → akar → batang → daun → atmosfer","Atmosfer → daun → batang → akar → tanah","Daun → atmosfer → akar → batang → tanah","Batang → daun → tanah → akar → atmosfer","Akar → atmosfer → daun → batang → tanah"], c:1},
+
+{t:"Floem", q:"Sel tapis (sieve tube element) pada floem tidak memiliki inti sel saat dewasa, namun tetap dapat berfungsi mengangkut hasil fotosintesis karena dibantu oleh...",
+ o:["Sel kipas di sekitarnya","Sel pengiring (companion cell) yang terhubung melalui plasmodesmata","Trakeid di sebelahnya","Sel epidermis atas daun","Kambium gabus"], c:1},
+
+{t:"Floem · Numerasi", q:"Data konsentrasi gula terlarut pada jaringan floem di dua lokasi berbeda pada satu tumbuhan:\nDaun dewasa (penghasil fotosintat): konsentrasi gula 18%\nUjung akar (jaringan yang sedang tumbuh aktif): konsentrasi gula 4%\nBerdasarkan hipotesis aliran tekanan (pressure flow hypothesis), arah aliran floem yang paling mungkin terjadi adalah...",
+ o:["Dari ujung akar menuju daun, karena air mengalir ke daerah berkonsentrasi tinggi","Dari daun (source) menuju ujung akar (sink), mengikuti gradien tekanan osmotik akibat loading gula di source","Tidak terjadi aliran karena kedua organ tidak terhubung floem","Aliran terjadi acak dua arah dengan kecepatan sama","Aliran berhenti total karena perbedaan konsentrasi terlalu besar"], c:1},
+
+{t:"Xilem", q:"Pada perkembangan xilem primer, protoxilem terbentuk lebih dahulu dan memiliki penebalan dinding berbentuk cincin atau spiral (memungkinkan organ masih dapat memanjang), sedangkan metaxilem terbentuk kemudian dengan penebalan dinding yang lebih kompleks. Pola perkembangan xilem primer pada akar (dari tepi ke pusat) disebut...",
+ o:["Endarch","Eksarch","Mesarch","Sentrifugal dari empulur","Tidak beraturan"], c:1},
+
+{t:"Berkas Pengangkut", q:"Berkas pengangkut kolateral terbuka, yaitu berkas pengangkut yang memiliki kambium di antara xilem dan floem sehingga dapat tumbuh sekunder, umumnya dijumpai pada batang...",
+ o:["Tumbuhan monokotil seperti jagung","Tumbuhan dikotil seperti kacang-kacangan","Tumbuhan paku homospora","Lumut hati","Semua tumbuhan tanpa kecuali"], c:1},
+
+{t:"Xilem · Numerasi", q:"Pada percobaan potometer, gelembung udara pada pipa kapiler bergerak sejauh 40 mm dalam waktu 8 menit akibat aktivitas transpirasi tanaman. Laju pergerakan gelembung (yang mencerminkan laju pengambilan air) tersebut adalah...",
+ o:["2 mm/menit","5 mm/menit","8 mm/menit","10 mm/menit","20 mm/menit"], c:1},
+
+{t:"Organ Akar", q:"Susunan jaringan pada penampang melintang akar dari lapisan terluar ke arah pusat yang tepat adalah...",
+ o:["Epidermis – stele – korteks – endodermis","Epidermis – korteks – endodermis – stele","Korteks – epidermis – stele – endodermis","Stele – endodermis – korteks – epidermis","Endodermis – epidermis – korteks – stele"], c:1},
+
+{t:"Organ Akar · Endodermis", q:"Pita Kaspari yang terdapat pada dinding radial dan melintang sel-sel endodermis akar berfungsi untuk...",
+ o:["Mempercepat aliran air melalui jalur apoplas","Memaksa air dan mineral melewati membran sel (jalur simplas) sehingga penyerapan dapat diseleksi","Menghasilkan hormon auksin","Menyimpan cadangan pati dalam jumlah besar","Melakukan fotosintesis tambahan pada akar"], c:1},
+
+{t:"Organ Akar", q:"Perbedaan struktur anatomi akar monokotil dan dikotil yang tepat adalah...",
+ o:["Akar monokotil memiliki kambium vaskuler, akar dikotil tidak","Xilem akar dikotil muda umumnya berbentuk bintang di pusat akar, sedangkan akar monokotil memiliki empulur luas di tengah dengan berkas pengangkut tersebar melingkar","Akar dikotil tidak memiliki endodermis, akar monokotil memilikinya","Akar monokotil selalu mengalami pertumbuhan sekunder yang jelas seperti dikotil","Keduanya memiliki struktur anatomi yang identik"], c:1},
+
+{t:"Organ Akar · Modifikasi", q:"Akar napas (pneumatofor) yang tumbuh tegak ke atas permukaan tanah/air, seperti pada tumbuhan bakau (Avicennia), berfungsi untuk...",
+ o:["Menyerap unsur hara tambahan","Membantu pertukaran udara (oksigen) karena akar tumbuh di tanah berlumpur yang minim oksigen","Menopang tumbuhan dari terpaan angin","Menyimpan cadangan air pada musim kemarau","Menghasilkan bunga tambahan"], c:1},
+
+{t:"Organ Akar · Numerasi", q:"Data panjang akar kecambah kacang hijau selama 5 hari pengamatan:\nHari 1: 5 mm\nHari 2: 12 mm\nHari 3: 20 mm\nHari 4: 29 mm\nHari 5: 39 mm\nLaju pertumbuhan rata-rata akar antara hari ke-3 dan hari ke-5 adalah...",
+ o:["4,5 mm/hari","7,0 mm/hari","9,5 mm/hari","12,0 mm/hari","15,0 mm/hari"], c:2},
+
+{t:"Organ Akar · Modifikasi", q:"Pasangan modifikasi akar dan fungsinya yang tepat adalah...",
+ o:["Akar tunjang (prop root) pada pandan/bakau berfungsi menopang batang dan menambah penyerapan oksigen","Akar gantung berfungsi menyimpan cadangan air pada semua tumbuhan","Akar banir hanya berfungsi sebagai tempat fotosintesis","Akar napas berfungsi mengangkut hasil fotosintesis","Akar tunjang berfungsi menggantikan floem"], c:0},
+
+{t:"Organ Batang", q:"Pada batang dikotil muda, berkas pengangkut (xilem dan floem) tersusun dalam pola...",
+ o:["Tersebar tidak beraturan di seluruh empulur","Melingkar teratur (dalam lingkaran) mengelilingi empulur","Hanya terkumpul pada satu titik di pusat batang","Tersusun sejajar memanjang searah sumbu daun","Tidak ditemukan pada batang muda"], c:1},
+
+{t:"Organ Batang · Kambium", q:"Aktivitas kambium vaskuler pada batang dikotil menghasilkan...",
+ o:["Xilem sekunder ke arah luar dan floem sekunder ke arah dalam","Floem sekunder ke arah luar dan xilem sekunder ke arah dalam","Xilem dan floem primer secara bersamaan","Hanya jaringan gabus ke segala arah","Hanya sel-sel epidermis baru"], c:1},
+
+{t:"Organ Batang · Lingkaran Tahun", q:"Lingkaran tahun (annual ring) pada batang pohon berkayu di daerah beriklim empat musim terbentuk akibat...",
+ o:["Perbedaan aktivitas felogen sepanjang tahun","Perbedaan aktivitas kambium vaskuler antara musim dengan air melimpah (sel besar, dinding tipis) dan musim kering (sel kecil, dinding tebal)","Aktivitas meristem apikal yang berhenti setiap tahun","Perubahan warna klorofil pada xilem","Pertumbuhan akar yang memengaruhi batang"], c:1},
+
+{t:"Organ Batang · Numerasi", q:"Penampang melintang sebuah batang pohon menunjukkan 18 lingkaran tahun yang jelas terbentuk sejak pohon tersebut dipindah-tanam (transplant) sebagai bibit berumur 2 tahun. Perkiraan umur pohon tersebut sekarang adalah...",
+ o:["16 tahun","18 tahun","20 tahun","22 tahun","36 tahun"], c:2},
+
+{t:"Organ Batang", q:"Berbeda dengan batang dikotil, batang monokotil pada umumnya...",
+ o:["Memiliki kambium vaskuler aktif sehingga tumbuh membesar seperti dikotil","Memiliki berkas pengangkut yang tersebar dan umumnya tidak memiliki kambium sehingga pertumbuhan sekunder terbatas","Tidak memiliki jaringan xilem maupun floem","Selalu memiliki lingkaran tahun yang jelas","Tidak memiliki epidermis pada batang"], c:1},
+
+{t:"Organ Batang · Kambium Gabus", q:"Felogen (kambium gabus) pada batang berkayu yang telah tua menghasilkan felem (sel gabus) ke arah luar dan feloderm ke arah dalam. Jaringan gabus ini berfungsi menggantikan peran...",
+ o:["Epidermis yang telah rusak/terkelupas seiring pertumbuhan sekunder","Xilem sebagai jaringan pengangkut air","Floem sebagai jaringan pengangkut hasil fotosintesis","Meristem apikal pada pemanjangan batang","Empulur sebagai penyimpan cadangan makanan"], c:0},
+
+{t:"Organ Batang", q:"Lentisel, yaitu celah kecil pada permukaan batang berkayu (kulit kayu), berfungsi sebagai...",
+ o:["Tempat masuknya cahaya untuk fotosintesis batang","Jalur pertukaran gas (oksigen dan karbon dioksida) menggantikan fungsi stomata setelah epidermis tergantikan gabus","Tempat keluarnya kelebihan air seperti gutasi","Jalur masuknya patogen secara sengaja","Tempat penyimpanan pati dalam jumlah besar"], c:1},
+
+{t:"Organ Batang · Numerasi", q:"Diameter batang tanaman sebelum diberi perlakuan hormon giberelin adalah 12 mm. Setelah beberapa minggu perlakuan, diameter batang menjadi 15 mm. Persentase pertambahan diameter batang tersebut adalah...",
+ o:["10%","15%","20%","25%","30%"], c:3},
+
+{t:"Organ Daun", q:"Struktur anatomi daun dorsiventral (bifasial) pada tumbuhan dikotil dari lapisan atas ke bawah yang tepat adalah...",
+ o:["Epidermis atas – jaringan spons – jaringan palisade – berkas pengangkut – epidermis bawah","Epidermis atas – jaringan palisade – jaringan spons – berkas pengangkut – epidermis bawah","Epidermis bawah – jaringan palisade – epidermis atas – berkas pengangkut","Berkas pengangkut – epidermis atas – palisade – spons – epidermis bawah","Epidermis atas – berkas pengangkut – palisade – spons – epidermis bawah"], c:1},
+
+{t:"Organ Daun", q:"Daun isobilateral (isolateral) yang umum dijumpai pada tumbuhan monokotil memiliki ciri khas...",
+ o:["Jaringan palisade hanya di sisi bawah daun","Mesofil tidak terdiferensiasi jelas menjadi palisade dan spons, kloroplas tersebar merata di kedua sisi","Tidak memiliki stomata sama sekali","Tidak memiliki berkas pengangkut","Hanya memiliki satu lapis epidermis di seluruh permukaan"], c:1},
+
+{t:"Organ Daun · Numerasi", q:"Data kerapatan stomata dan laju transpirasi pada empat spesies tumbuhan:\nSpesies A: kerapatan 100/mm², laju transpirasi 2,0 mg H₂O/cm²/jam\nSpesies B: kerapatan 200/mm², laju transpirasi 3,8 mg H₂O/cm²/jam\nSpesies C: kerapatan 300/mm², laju transpirasi 5,5 mg H₂O/cm²/jam\nSpesies D: kerapatan 400/mm², laju transpirasi 7,9 mg H₂O/cm²/jam\nBerdasarkan data tersebut, hubungan antara kerapatan stomata dan laju transpirasi adalah...",
+ o:["Berbanding lurus (semakin tinggi kerapatan stomata, semakin tinggi laju transpirasi)","Berbanding terbalik","Tidak ada hubungan sama sekali","Hanya berlaku pada kerapatan stomata rendah","Hubungannya acak dan tidak dapat disimpulkan"], c:0},
+
+{t:"Organ Daun · Stomata", q:"Tipe stomata parasitik dicirikan dengan...",
+ o:["Sel tetangga tersusun sejajar dengan sumbu panjang sel penjaga","Sel tetangga tidak dapat dibedakan dari sel epidermis lain di sekitarnya","Jumlah sel tetangga selalu tiga buah dengan ukuran tidak sama","Sel tetangga tersusun tegak lurus terhadap sel penjaga","Tidak memiliki sel tetangga sama sekali"], c:0},
+
+{t:"Organ Daun · Mesofil", q:"Sel-sel parenkim palisade pada mesofil daun umumnya mengandung kloroplas lebih banyak dibandingkan sel parenkim spons. Hal ini berkaitan erat dengan...",
+ o:["Palisade terletak lebih dekat sumber cahaya sehingga dioptimalkan untuk laju fotosintesis maksimum","Palisade berfungsi sebagai jaringan pengangkut utama","Palisade tidak melakukan respirasi","Spons memiliki dinding sel lebih tebal sehingga menghambat kloroplas","Kedua jaringan memiliki jumlah kloroplas yang identik"], c:0},
+
+{t:"Organ Daun · Numerasi", q:"Data laju fotosintesis neto pada berbagai intensitas cahaya:\n0 klux: -2 mg CO₂/jam (hanya respirasi)\n2 klux: 0 mg CO₂/jam\n5 klux: 3 mg CO₂/jam\n8 klux: 6 mg CO₂/jam\n12 klux: 6 mg CO₂/jam (telah jenuh)\nTitik kompensasi cahaya (intensitas saat laju fotosintesis neto = 0) tumbuhan tersebut berada pada intensitas...",
+ o:["0 klux","2 klux","5 klux","8 klux","12 klux"], c:1},
+
+{t:"Organ Daun · Modifikasi", q:"Kantong pada tumbuhan kantong semar (Nepenthes) merupakan modifikasi dari organ...",
+ o:["Batang","Akar","Daun","Bunga","Buah"], c:2},
+
+{t:"Organ Daun · Adaptasi", q:"Tumbuhan CAM (Crassulacean Acid Metabolism) seperti kaktus membuka stomatanya pada malam hari dan menutupnya pada siang hari. Adaptasi jaringan epidermis dan mesofil ini bertujuan untuk...",
+ o:["Memaksimalkan fotosintesis langsung pada siang hari","Mengurangi kehilangan air melalui transpirasi pada siang hari yang panas sambil tetap dapat mengambil CO₂ pada malam hari","Meningkatkan penyerapan air melalui daun","Mempercepat pertumbuhan sekunder batang","Menghindari serangan herbivora nokturnal"], c:1},
+
+{t:"Kultur Jaringan", q:"Dasar teori yang mendukung keberhasilan teknik kultur jaringan tumbuhan adalah konsep...",
+ o:["Fotoperiodisme","Totipotensi sel, yaitu kemampuan satu sel somatik untuk berkembang menjadi individu baru yang utuh","Dominansi apikal","Fototropisme positif","Vernalisasi"], c:1},
+
+{t:"Kultur Jaringan", q:"Urutan tahapan umum kultur jaringan tumbuhan yang tepat adalah...",
+ o:["Aklimatisasi – inisiasi eksplan – induksi kalus – perbanyakan tunas – pengakaran","Inisiasi eksplan – induksi/sterilisasi – pembentukan kalus – perbanyakan tunas – pengakaran – aklimatisasi","Induksi kalus – aklimatisasi – sterilisasi – pengakaran – inisiasi eksplan","Pengakaran – perbanyakan tunas – inisiasi eksplan – aklimatisasi","Perbanyakan tunas – inisiasi eksplan – aklimatisasi – induksi kalus"], c:1},
+
+{t:"Kultur Jaringan · Numerasi", q:"Satu eksplan berhasil membentuk kalus yang kemudian menghasilkan rata-rata 5 planlet setiap kali disubkultur. Jika dilakukan 3 kali subkultur berturut-turut (setiap planlet hasil subkultur sebelumnya kembali menghasilkan rata-rata 5 planlet baru), maka total planlet yang dihasilkan dari satu eksplan awal tersebut adalah...",
+ o:["15 planlet","25 planlet","75 planlet","125 planlet","625 planlet"], c:3},
+
+{t:"Adaptasi Jaringan", q:"Perbandingan adaptasi jaringan pada tumbuhan xerofit dan hidrofit yang tepat adalah...",
+ o:["Xerofit memiliki kutikula tipis dan stomata banyak di permukaan atas daun, hidrofit sebaliknya","Xerofit memiliki kutikula tebal dan stomata tersembunyi (kripte), sedangkan hidrofit memiliki aerenkim luas dan stomata umumnya di permukaan atas daun yang mengapung","Keduanya memiliki struktur jaringan yang identik","Xerofit tidak memiliki jaringan epidermis","Hidrofit selalu memiliki sklerenkim yang sangat tebal untuk mengapung"], c:1},
+
+{t:"Adaptasi Jaringan · Halofit", q:"Tumbuhan halofit (hidup di lingkungan bersalinitas tinggi seperti mangrove) memiliki struktur khusus berupa kelenjar garam (salt gland) pada epidermis daun yang berfungsi untuk...",
+ o:["Menyerap garam tambahan dari udara","Mengeluarkan/mensekresikan kelebihan garam agar konsentrasi ion dalam jaringan tetap seimbang","Menghasilkan klorofil tambahan","Mempercepat fotosintesis pada malam hari","Menggantikan fungsi stomata sepenuhnya"], c:1},
+];
+
+/* ============ STATE ============ */
+let state = {
+  screen: 'start',
+  nama: '',
+  kelas: '',
+  jawaban: new Array(QUESTIONS.length).fill(-1),
+  idx: 0,
+  startTime: null,
+  timerHandle: null,
+  elapsedSec: 0
+};
+
+const app = document.getElementById('app');
+const footnote = document.getElementById('footnote');
+
+function fmtWaktu(sec){
+  const m = Math.floor(sec/60).toString().padStart(2,'0');
+  const s = Math.floor(sec%60).toString().padStart(2,'0');
+  return m+':'+s;
+}
+function fmtDurasiPanjang(sec){
+  const m = Math.floor(sec/60);
+  const s = Math.floor(sec%60);
+  return m+' menit '+s+' detik';
+}
+function inisial(nama){
+  return (nama||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+
+/* ============ RENDER: START ============ */
+function renderStart(){
+  footnote.textContent = '';
+  app.innerHTML = `
+    <div class="card">
+      <p class="lead">Kuis ini berisi <b>60 soal pilihan ganda</b> (5 opsi) bergaya literasi–numerasi dengan materi <b>jaringan dan organ tumbuhan</b>, disusun setara soal TKA/Ujian Nasional, OSN, dan POSI Biologi. Waktu pengerjaan akan dicatat otomatis sejak kuis dimulai.</p>
+      <div class="field">
+        <label for="in-nama">Nama Lengkap</label>
+        <input id="in-nama" type="text" placeholder="Tulis nama lengkap kamu" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="in-kelas">Kelas</label>
+        <input id="in-kelas" type="text" placeholder="Contoh: XI MIPA 1" autocomplete="off">
+      </div>
+      <p class="meta-note">Catatan: hasil (nama, kelas, skor, waktu) akan tersimpan pada rekap bersama yang dapat dilihat oleh guru dan pengguna lain yang membuka kuis ini.</p>
+      <button class="btn btn-utama" id="btn-mulai" style="width:100%;">Mulai Ujian</button>
+      <div style="text-align:center;margin-top:14px;">
+        <button class="btn btn-luar btn-kecil" id="btn-lihat-rekap">Lihat Rekap Nilai (Guru)</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('btn-mulai').onclick = () => {
+    const nama = document.getElementById('in-nama').value.trim();
+    const kelas = document.getElementById('in-kelas').value.trim();
+    if(!nama || !kelas){ alert('Mohon isi nama dan kelas terlebih dahulu.'); return; }
+    state.nama = nama; state.kelas = kelas;
+    state.jawaban = new Array(QUESTIONS.length).fill(-1);
+    state.idx = 0; state.elapsedSec = 0;
+    state.startTime = new Date();
+    state.screen = 'quiz';
+    startTimer();
+    renderQuiz();
+  };
+  document.getElementById('btn-lihat-rekap').onclick = () => { state.screen='admin'; renderAdmin(); };
+}
+
+function startTimer(){
+  if(state.timerHandle) clearInterval(state.timerHandle);
+  state.timerHandle = setInterval(()=>{
+    state.elapsedSec = Math.floor((new Date() - state.startTime)/1000);
+    const el = document.getElementById('timer-live');
+    if(el) el.textContent = fmtWaktu(state.elapsedSec);
+  }, 1000);
+}
+
+/* ============ RENDER: QUIZ ============ */
+function renderQuiz(){
+  footnote.textContent = 'Gunakan peta soal di bawah untuk berpindah ke nomor mana pun sebelum menekan “Selesai”.';
+  const i = state.idx;
+  const soal = QUESTIONS[i];
+  const dijawab = state.jawaban.filter(j=>j>=0).length;
+
+  app.innerHTML = `
+    <div class="infobar">
+      <div class="siswa-chip"><span class="avatar">${inisial(state.nama)}</span><span><b>${escapeHtml(state.nama)}</b> · ${escapeHtml(state.kelas)}</span></div>
+      <div class="timer-chip">⏱ <span id="timer-live">${fmtWaktu(state.elapsedSec)}</span></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${(dijawab/QUESTIONS.length*100).toFixed(0)}%"></div></div>
+    <div class="card">
+      <div class="soal-nomor">Soal ${i+1} dari ${QUESTIONS.length} <span class="soal-topik">· ${escapeHtml(soal.t)}</span></div>
+      <div class="soal-teks">${escapeHtml(soal.q)}</div>
+      <div class="opsi" id="opsi-wrap">
+        ${soal.o.map((op,k)=>`
+          <button data-k="${k}" class="${state.jawaban[i]===k?'dipilih':''}">
+            <span class="huruf">${String.fromCharCode(65+k)}</span><span>${escapeHtml(op)}</span>
+          </button>`).join('')}
+      </div>
+      <div class="nav-row">
+        <button class="btn btn-luar" id="btn-prev" ${i===0?'disabled':''}>← Sebelumnya</button>
+        <div class="kanan">
+          ${i<QUESTIONS.length-1 ? '<button class="btn btn-utama" id="btn-next">Berikutnya →</button>' : '<button class="btn btn-utama" id="btn-selesai">Selesai &amp; Kumpulkan</button>'}
+        </div>
+      </div>
+      <div class="peta">
+        ${QUESTIONS.map((_,k)=>`<button data-k="${k}" class="${state.jawaban[k]>=0?'terjawab':''} ${k===i?'aktif':''}">${k+1}</button>`).join('')}
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('#opsi-wrap button').forEach(b=>{
+    b.onclick = ()=>{ state.jawaban[i] = parseInt(b.dataset.k); renderQuiz(); };
+  });
+  const prevBtn = document.getElementById('btn-prev');
+  if(prevBtn) prevBtn.onclick = ()=>{ state.idx--; renderQuiz(); };
+  const nextBtn = document.getElementById('btn-next');
+  if(nextBtn) nextBtn.onclick = ()=>{ state.idx++; renderQuiz(); };
+  const doneBtn = document.getElementById('btn-selesai');
+  if(doneBtn) doneBtn.onclick = ()=>{
+    const kosong = state.jawaban.filter(j=>j<0).length;
+    const pesan = kosong>0 ? `Masih ada ${kosong} soal yang belum dijawab. Yakin ingin menyelesaikan ujian sekarang?` : 'Yakin ingin mengumpulkan jawaban sekarang? Jawaban tidak dapat diubah setelah dikumpulkan.';
+    if(confirm(pesan)) selesaikanUjian();
+  };
+  document.querySelectorAll('.peta button').forEach(b=>{
+    b.onclick = ()=>{ state.idx = parseInt(b.dataset.k); renderQuiz(); };
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+}
+
+/* ============ SELESAI → SIMPAN & TAMPILKAN HASIL ============ */
+async function selesaikanUjian(){
+  clearInterval(state.timerHandle);
+  const durasi = Math.floor((new Date() - state.startTime)/1000);
+  let benar = 0;
+  const topikStat = {};
+  QUESTIONS.forEach((soal,k)=>{
+    const t = soal.t.split(' · ')[0];
+    if(!topikStat[t]) topikStat[t] = {benar:0,total:0};
+    topikStat[t].total++;
+    if(state.jawaban[k]===soal.c){ benar++; topikStat[t].benar++; }
+  });
+  const skorPersen = Math.round((benar/QUESTIONS.length)*100);
+
+  state.hasil = { benar, total: QUESTIONS.length, persen: skorPersen, durasi, topikStat };
+
+  const record = {
+    nama: state.nama,
+    kelas: state.kelas,
+    benar, total: QUESTIONS.length, persen: skorPersen,
+    waktuMulai: state.startTime.toISOString(),
+    durasiDetik: durasi
+  };
+  const key = 'results:' + Date.now() + '_' + state.nama.replace(/\s+/g,'_').toLowerCase().slice(0,40);
+  try{
+    await window.storage.set(key, JSON.stringify(record), true);
+  }catch(e){ console.error('Gagal menyimpan hasil', e); }
+
+  state.screen = 'result';
+  renderResult();
+}
+
+/* ============ RENDER: RESULT ============ */
+function renderResult(){
+  footnote.textContent = '';
+  const h = state.hasil;
+  app.innerHTML = `
+    <div class="card">
+      <div class="skor-besar">
+        <div class="skor-angka">${h.benar}<span style="font-size:1.4rem;color:var(--teks-lembut);"> / ${h.total}</span></div>
+        <div class="skor-label">${escapeHtml(state.nama)} · ${escapeHtml(state.kelas)} — skor ${h.persen}%</div>
+      </div>
+      <div class="ringkas-grid">
+        <div class="ringkas-item"><div class="k">Waktu Mulai</div><div class="v">${state.startTime.toLocaleString('id-ID')}</div></div>
+        <div class="ringkas-item"><div class="k">Lama Mengerjakan</div><div class="v">${fmtDurasiPanjang(h.durasi)}</div></div>
+        <div class="ringkas-item"><div class="k">Jawaban Benar</div><div class="v">${h.benar} soal</div></div>
+        <div class="ringkas-item"><div class="k">Jawaban Salah/Kosong</div><div class="v">${h.total-h.benar} soal</div></div>
+      </div>
+      <div class="topik-breakdown">
+        <h3>Capaian per Sub-materi</h3>
+        ${Object.entries(h.topikStat).map(([t,s])=>`
+          <div class="topik-row">
+            <div class="nama">${escapeHtml(t)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(s.benar/s.total*100).toFixed(0)}%"></div></div>
+            <div class="angka">${s.benar}/${s.total}</div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;">
+        <button class="btn btn-luar" id="btn-ulang">Ujian Lagi (Siswa Lain)</button>
+        <button class="btn btn-utama" id="btn-rekap">Lihat Rekap Nilai Kelas</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('btn-ulang').onclick = ()=>{ state.screen='start'; renderStart(); };
+  document.getElementById('btn-rekap').onclick = ()=>{ state.screen='admin'; renderAdmin(); };
+}
+
+/* ============ RENDER: ADMIN / REKAP ============ */
+async function renderAdmin(){
+  footnote.textContent = 'Rekap ini bersifat bersama (shared) — dapat dilihat oleh siapa pun yang membuka kuis ini.';
+  app.innerHTML = `<div class="card"><p class="lead" style="margin:0;">Memuat rekap nilai…</p></div>`;
+
+  let records = [];
+  try{
+    const listRes = await window.storage.list('results:', true);
+    const keys = (listRes && listRes.keys) ? listRes.keys : [];
+    for(const k of keys){
+      try{
+        const r = await window.storage.get(k, true);
+        if(r && r.value) records.push(JSON.parse(r.value));
+      }catch(e){}
+    }
+  }catch(e){ console.error(e); }
+
+  records.sort((a,b)=> new Date(b.waktuMulai) - new Date(a.waktuMulai));
+
+  const rataRata = records.length ? Math.round(records.reduce((s,r)=>s+r.persen,0)/records.length) : 0;
+
+  app.innerHTML = `
+    <div class="top-actions">
+      <button class="btn btn-luar btn-kecil" id="btn-kembali">← Kembali ke Kuis</button>
+      <button class="btn btn-utama btn-kecil" id="btn-unduh">⬇ Unduh Excel (.xlsx)</button>
+    </div>
+    <div class="card">
+      <div class="ringkas-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="ringkas-item"><div class="k">Peserta</div><div class="v">${records.length}</div></div>
+        <div class="ringkas-item"><div class="k">Rata-rata Skor</div><div class="v">${rataRata}%</div></div>
+        <div class="ringkas-item"><div class="k">Total Soal</div><div class="v">${QUESTIONS.length}</div></div>
+      </div>
+      ${records.length===0 ? '<div class="kosong">Belum ada siswa yang menyelesaikan kuis ini.</div>' : `
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead><tr><th>Nama</th><th>Kelas</th><th>Benar</th><th>Skor</th><th>Waktu Mulai</th><th>Durasi</th></tr></thead>
+          <tbody>
+            ${records.map(r=>`
+              <tr>
+                <td>${escapeHtml(r.nama)}</td>
+                <td>${escapeHtml(r.kelas)}</td>
+                <td>${r.benar}/${r.total}</td>
+                <td>${r.persen}%</td>
+                <td>${new Date(r.waktuMulai).toLocaleString('id-ID')}</td>
+                <td>${fmtDurasiPanjang(r.durasiDetik)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`}
+    </div>
+  `;
+  document.getElementById('btn-kembali').onclick = ()=>{ state.screen='start'; renderStart(); };
+  document.getElementById('btn-unduh').onclick = ()=> unduhExcel(records);
+}
+
+function unduhExcel(records){
+  if(!records.length){ alert('Belum ada data untuk diunduh.'); return; }
+  const rows = records.map(r=>({
+    'Nama': r.nama,
+    'Kelas': r.kelas,
+    'Jawaban Benar': r.benar,
+    'Total Soal': r.total,
+    'Skor (%)': r.persen,
+    'Waktu Mulai': new Date(r.waktuMulai).toLocaleString('id-ID'),
+    'Lama Mengerjakan': fmtDurasiPanjang(r.durasiDetik)
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:22},{wch:14},{wch:14},{wch:11},{wch:10},{wch:20},{wch:18}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Rekap Nilai');
+  XLSX.writeFile(wb, 'rekap_nilai_jaringan_tumbuhan.xlsx');
+}
+
+/* ============ INIT ============ */
+renderStart();
+</script>
+</body>
+</html>
